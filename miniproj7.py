@@ -37,15 +37,19 @@ def spellcheck():
     history_tracking.append(text)
 
     if detected_lang == 'en':  # Spell check works better for English in TextBlob
-        blob = TextBlob(text)
-        corrected_text = str(blob.correct())
+        messagebox.showinfo("Message", "Language belongs to English")    
+        #blob = TextBlob(text)
+        #corrected_text = str(blob.correct())
     else:
-        messagebox.showinfo("Error", f"Spell checking is only supported for English currently. Detected language: {detected_lang}")
+        if detected_lang=='de':
+            messagebox.showinfo("Message", "Language belongs to Deutsch")
+        else:
+            messagebox.showinfo("Message", "The language of the entered words is neither english nor deutsch")
         return
 
     # Update the Text widget with the corrected text
-    text_box.delete("1.0", tk.END)
-    text_box.insert(tk.END, corrected_text)
+    #text_box.delete("1.0", tk.END)
+    #text_box.insert(tk.END, corrected_text)
 
 def pronun():
     word = text_box.get("1.0", tk.END).strip()
