@@ -116,6 +116,11 @@ def update_colors():
 	bg_color = "#1c1c1e" if dark_mode_var.get() else "#fff8c9"
 	text_color = "white" if dark_mode_var.get() else "black"
 
+	if dark_mode_var.get():
+		mainlabel.config(image = heading_dark)
+	else:
+		mainlabel.config(image = heading_light)
+
 	root.configure(bg=bg_color)
 	mode_button.configure(bg=bg_color, fg=text_color)
 	
@@ -139,8 +144,9 @@ speaker=ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/
 dark_mode_var = tk.BooleanVar()
 dark_mode_var.set(False)
 
-heading=ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_dark.jpeg"))
-mainlabel=tk.Label(image=heading)
+heading_light =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_dark.jpeg"))
+heading_dark =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_light.jpg"))
+mainlabel=tk.Label(image = heading_light)
 mainlabel.place(x=0,y=0)
 
 label1=tk.Label(root,text="Enter text here:",font=("georgia",24))
