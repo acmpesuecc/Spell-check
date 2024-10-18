@@ -1,5 +1,5 @@
 import tkinter as tk
-from spellchecker import SpellChecker as sc
+import TextBlob as tb
 from nltk.corpus import wordnet
 import pyttsx3
 
@@ -11,7 +11,6 @@ import customtkinter
 from tkinter import messagebox
 
 
-spell_checker = sc()
 eng = pyttsx3.init()
 history_tracking = []
 
@@ -20,11 +19,17 @@ history_tracking = []
 def spellcheck():
 	text=entry1.get()
 	history_tracking.append(text)
-	misspelled = spell_checker.unknown(text.lower().split())
+
+	#finding out misspelled words
+	misspelled = []
+	for word_in_text in text.lower().split():
+		if tb.correct(word_in_text) != word_in_text:
+			misspelled.append(word_in_text)
+
 	corrected_text = text
 
 	for word in misspelled:
-		suggestions = spell_checker.correction(word)
+		suggestions = tb.correct(word)
 		if suggestions != word:
 			question = f"Is '{suggestions}' the correct spelling for '{word}'? (Y/N)"
 			user_response = messagebox.askquestion("Spelling Check", question)
@@ -33,7 +38,7 @@ def spellcheck():
 				entry1.delete(0,"end")
 				entry1.insert(10, corrected_text)
 			else:
-				suggestions_text = f"Suggestions for {word}: {', '.join(spell_checker.candidates(word))}"
+				suggestions_text = f"Suggestions for {word}: {', '.join(tb.correct(word))}"
 				messagebox.showinfo("Spelling Suggestions", suggestions_text)
 
 def pronun():
