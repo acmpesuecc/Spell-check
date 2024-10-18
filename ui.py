@@ -5,18 +5,23 @@ from PyQt6.QtCore import Qt
 from textblob import TextBlob
 from nltk.corpus import wordnet
 import pyttsx3
+from googletrans import Translator
+from spellchecker import SpellChecker
 
 # Initialize text-to-speech engine
 eng = pyttsx3.init()
+translator = Translator()
 
 # User dictionary and history
 user_dict = set()
 history_tracking = []
 
+# Initialize SpellChecker for German
+german_spell_checker = SpellChecker(language='de')
+
 class PhraseCraftApp(QWidget):
     def __init__(self):
         super().__init__()
-
         self.init_ui()
 
     def init_ui(self):
@@ -31,26 +36,20 @@ class PhraseCraftApp(QWidget):
         """)
 
         layout = QVBoxLayout()
-
         self.create_app_bar(layout)
-
         self.create_search_area(layout)
-
         self.create_action_buttons(layout)
-
         self.create_output_area(layout)
 
         self.setLayout(layout)
 
     def create_app_bar(self, layout):
         appbar_layout = QHBoxLayout()
-
         title_label = QLabel("PhraseCraft", self)
         title_label.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         title_label.setStyleSheet("color: #FFEA00;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         appbar_layout.addWidget(title_label)
-
         appbar_layout.addStretch(1)
         layout.addLayout(appbar_layout)
 
@@ -94,7 +93,6 @@ class PhraseCraftApp(QWidget):
         """)
         self.btn_spellcheck.clicked.connect(self.spellcheck)
         search_layout.addWidget(self.btn_spellcheck)
-
         layout.addLayout(search_layout)
 
     def create_action_buttons(self, layout):
@@ -124,11 +122,6 @@ class PhraseCraftApp(QWidget):
         self.set_button_style(self.btn_display_dict)
         self.btn_display_dict.clicked.connect(self.display_user_dict)
         buttons_layout.addWidget(self.btn_display_dict, 2, 0)
-
-        self.btn_remove_dict = QPushButton("Remove from my Dictionary", self)
-        self.set_button_style(self.btn_remove_dict)
-        self.btn_remove_dict.clicked.connect(self.remove_from_user_dict)
-        buttons_layout.addWidget(self.btn_remove_dict, 2, 1)
 
         self.btn_display_history = QPushButton("Display History", self)
         self.set_button_style(self.btn_display_history)
@@ -175,20 +168,49 @@ class PhraseCraftApp(QWidget):
         """)
         layout.addWidget(self.output_area)
 
+    def detect_language(self, text):
+        try:
+            detection = translator.detect(text)
+            return detection.lang  # Returns language code
+        except Exception as e:
+            self.output_area.setText(f"Error detecting language: {e}")
+            return None
+
+    def correct_text(self, text, lang):
+        suggestions = {}
+        corrected_text = []
+
+        if lang == 'en':
+            blob = TextBlob(text)
+            corrected_text = str(blob.correct())
+
+        elif lang == 'de':
+            for word in text.split():
+                if word in german_spell_checker:
+                    corrected_text.append(word)
+                else:
+                    suggestion_list = german_spell_checker.candidates(word)
+                    suggestions[word] = list(suggestion_list)
+                    corrected_text.append(german_spell_checker.correction(word))
+
+        return " ".join(corrected_text)
+
     def spellcheck(self):
         text = self.text_input.text()
-        history_tracking.append(text)
-        blob = TextBlob(text)
-        corrected_text = str(blob.correct())
+        if not text:
+            QMessageBox.information(self, "Spell Check", "Please enter some text.")
+            return
 
-        if corrected_text != text:
-            question = f"Did you mean: '{corrected_text}'?"
-            reply = QMessageBox.question(self, 'Spell Check', question, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-            
-            if reply == QMessageBox.StandardButton.Yes:
-                self.text_input.setText(corrected_text)
-            else:
-                self.output_area.setText("No better suggestions were found.")
+        detected_lang = self.detect_language(text)
+        if detected_lang is None:
+            QMessageBox.information(self, "Error", "Could not detect the language.")
+            return
+
+        history_tracking.append(text)
+        corrected_text = self.correct_text(text, detected_lang)
+
+        if corrected_text and corrected_text != text:
+            self.output_area.setText(f"Corrected Text: {corrected_text}")
         else:
             self.output_area.setText("No spelling errors found.")
 
@@ -201,18 +223,8 @@ class PhraseCraftApp(QWidget):
         word = self.text_input.text()
         synsets = wordnet.synsets(word)
         meanings = [syn.definition() for syn in synsets] if synsets else []
-        origins = self.get_word_origin(word)
-
-        output = f"Word: {word}\nMeanings: {meanings}\nOrigin: {origins}"
+        output = f"Word: {word}\nMeanings: {meanings}"
         self.output_area.setText(output)
-
-    def get_word_origin(self, word):
-        synsets = wordnet.synsets(word)
-        origins = set()
-        for syn in synsets:
-            for lemma in syn.lemmas():
-                origins.add(lemma.name())
-        return origins
 
     def get_synonyms(self):
         word = self.text_input.text()
@@ -232,26 +244,23 @@ class PhraseCraftApp(QWidget):
         user_dict.add(word)
         self.output_area.setText(f"'{word}' added to My Dictionary.")
 
-    def remove_from_user_dict(self):
-        word = self.text_input.text()
-        user_dict.discard(word)
-
     def display_user_dict(self):
         if user_dict:
-            self.output_area.setText(f"My Dictionary:\n" + ", ".join(user_dict))
+            self.output_area.setText("My Dictionary:\n" + ", ".join(user_dict))
         else:
-            self.output_area.setText("My Dictionary is empty.")
+            self.output_area.setText("Your dictionary is empty.")
 
     def display_history(self):
         if history_tracking:
-            self.output_area.setText(f"History:\n" + ", ".join(history_tracking))
+            self.output_area.setText("History:\n" + "\n".join(history_tracking))
         else:
-            self.output_area.setText("History is empty.")
+            self.output_area.setText("No history available.")
 
     def clear_output(self):
-        self.output_area.setText("")
+        self.output_area.clear()
+        self.text_input.clear()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = PhraseCraftApp()
     window.show()
