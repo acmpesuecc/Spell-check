@@ -144,8 +144,8 @@ speaker=ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/
 dark_mode_var = tk.BooleanVar()
 dark_mode_var.set(False)
 
-heading_light =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_dark.jpeg"))
-heading_dark =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_light.jpg"))
+heading_light =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_light.jpg"))
+heading_dark =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_dark.jpeg"))
 mainlabel=tk.Label(image = heading_light)
 mainlabel.place(x=0,y=0)
 
