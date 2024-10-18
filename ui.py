@@ -122,6 +122,11 @@ class PhraseCraftApp(QWidget):
         self.set_button_style(self.btn_display_dict)
         self.btn_display_dict.clicked.connect(self.display_user_dict)
         buttons_layout.addWidget(self.btn_display_dict, 2, 0)
+        
+        self.btn_remove_dict = QPushButton("Remove from my Dictionary", self)
+        self.set_button_style(self.btn_remove_dict)
+        #self.btn_remove_dict.clicked.connect(self.remove_from_user_dict)
+        buttons_layout.addWidget(self.btn_remove_dict, 2, 1)
 
         self.btn_display_history = QPushButton("Display History", self)
         self.set_button_style(self.btn_display_history)
