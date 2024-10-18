@@ -1,5 +1,5 @@
 import tkinter as tk
-import TextBlob as tb
+from textblob import TextBlob as tb
 from nltk.corpus import wordnet
 import pyttsx3
 
