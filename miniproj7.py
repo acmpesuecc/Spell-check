@@ -94,11 +94,17 @@ def remove():
         label_hist.place_forget()
 
 def update_colors():
-    bg_color = "#1c1c1e" if dark_mode_var.get() else "#fff8c9"
-    text_color = "white" if dark_mode_var.get() else "black"
+	bg_color = "#1c1c1e" if dark_mode_var.get() else "#fff8c9"
+	text_color = "white" if dark_mode_var.get() else "black"
 
-    root.configure(bg=bg_color)
-    mode_button.configure(bg=bg_color, fg=text_color)
+	if dark_mode_var.get():
+		mainlabel.config(image = heading_dark)
+	else:
+		mainlabel.config(image = heading_light)
+
+	root.configure(bg=bg_color)
+	mode_button.configure(bg=bg_color, fg=text_color)
+	
 
 def toggle_mode():
     current_mode = dark_mode_var.get()
@@ -117,9 +123,28 @@ speaker = ImageTk.PhotoImage(Image.open(r"C:\Users\gonel\OneDrive\Desktop\hackni
 dark_mode_var = tk.BooleanVar()
 dark_mode_var.set(False)
 
-heading = ImageTk.PhotoImage(Image.open(r"C:\Users\gonel\OneDrive\Desktop\hacknight-24\hknyt24-Spell-check\title_dark.jpeg"))
-mainlabel = tk.Label(image=heading)
-mainlabel.place(x=0, y=0)
+heading_light =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_light.jpg"))
+heading_dark =ImageTk.PhotoImage(Image.open(r"/home/Suchitra/Desktop/code./dictionary/title_dark.jpeg"))
+mainlabel=tk.Label(image = heading_light)
+mainlabel.place(x=0,y=0)
+
+label1=tk.Label(root,text="Enter text here:",font=("georgia",24))
+label1.place(x=2,y=200)
+
+entry1=tk.Entry(font="georgia",fg="black")
+entry1.place(x=240,y=210)
+
+b1=customtkinter.CTkButton(master=root,text="spellcheck",command=spellcheck)
+b1.place(x=440,y=210)
+
+b2=tk.Button(root,text="Meanings and Origin",bg="pink",fg="black",font="georgia",borderwidth=10,command=get_word_info)
+b2.place(x=2,y=260)
+
+b3=tk.Button(root,text="Synonyms",bg="pink",fg="black",font="georgia",borderwidth=10,command=get_synonyms)
+b3.place(x=200,y=260)
+
+b4=tk.Button(root,text="My Dictionary",bg="pink",fg="black",font="georgia",borderwidth=10,command=disp_ud)
+b4.place(x=315,y=260)
 
 label1 = tk.Label(root, text="Enter text here:", font=("georgia", 24))
 label1.place(x=2, y=200)

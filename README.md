@@ -11,18 +11,22 @@ PhraseCraft is a Tkinter-based application designed to enhance your vocabulary a
 - **User Dictionary:** Add your own words to personalize your experience.
 
 ## Installation
+
 ```bash
   git clone https://github.com/YourUsername/PhraseCraft.git
   cd PhraseCraft
   pip install pyttsx3 spellchecker nltk customtkinter
   python3 miniproj7.py
 ```
+## Contact
+6366250274 for any queries/assistance
 
 ## Credits
 
 - Anisha: Banner designs and artwork.
 
 ## Contribution
+
 Feel free to add to the functionality, with supporting code.
 
 ## License
