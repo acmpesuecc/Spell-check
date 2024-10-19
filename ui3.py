@@ -6,6 +6,7 @@ from textblob import TextBlob
 from nltk.corpus import wordnet
 import pyttsx3
 from g2p_en import G2p
+import sqlite3
 
 # Initialize text-to-speech engine
 eng = pyttsx3.init()
@@ -16,10 +17,55 @@ g2p = G2p()
 user_dict = set()
 history_tracking = []
 
+class DatabaseManager:
+    def __init__(self, db_name="spell_checker.db"):
+        self.connection = sqlite3.connect(db_name)
+        self.cursor = self.connection.cursor()
+        self.create_table()
+
+    def create_table(self):
+        # Create a table with two columns: history and custom_words
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS words (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                history TEXT,
+                custom_words TEXT
+            )
+        ''')
+        self.connection.commit()
+
+    def add_to_history(self, word):
+        # Add a word to the history column, leaving custom_words as NULL
+        self.cursor.execute('INSERT INTO words (history, custom_words) VALUES (?, NULL)', (word,))
+        self.connection.commit()
+
+    def add_to_custom_words(self, word):
+        # Add a word to the custom_words column, leaving history as NULL
+        self.cursor.execute('INSERT INTO words (history, custom_words) VALUES (NULL, ?)', (word,))
+        self.connection.commit()
+
+    def get_all_history(self):
+        # Retrieve all words from the history column
+        self.cursor.execute('SELECT history FROM words WHERE history IS NOT NULL')
+        return [row[0] for row in self.cursor.fetchall()]
+
+    def get_all_custom_words(self):
+        # Retrieve all words from the custom_words column
+        self.cursor.execute('SELECT custom_words FROM words WHERE custom_words IS NOT NULL')
+        return [row[0] for row in self.cursor.fetchall()]
+    
+    def remove_from_custom_words(self, word):
+        # Remove a word from the custom_words column
+        self.cursor.execute('DELETE FROM words WHERE custom_words = ?', (word,))
+        self.connection.commit()
+
+    def close(self):
+        self.connection.close()
+
 class PhraseCraftApp(QWidget):
     def __init__(self):
         super().__init__()
-
+        self.db = DatabaseManager()
         self.init_ui()
 
     def init_ui(self):
@@ -120,22 +166,22 @@ class PhraseCraftApp(QWidget):
 
         self.btn_add_dict = QPushButton("Add to My Dictionary", self)
         self.set_button_style(self.btn_add_dict)
-        self.btn_add_dict.clicked.connect(self.add_to_user_dict)
+        self.btn_add_dict.clicked.connect(self.add_to_custom_words)
         buttons_layout.addWidget(self.btn_add_dict, 1, 1)
 
         self.btn_display_dict = QPushButton("Display My Dictionary", self)
         self.set_button_style(self.btn_display_dict)
-        self.btn_display_dict.clicked.connect(self.display_user_dict)
+        self.btn_display_dict.clicked.connect(self.show_custom_words)
         buttons_layout.addWidget(self.btn_display_dict, 2, 0)
 
         self.btn_remove_dict = QPushButton("Remove from my Dictionary", self)
         self.set_button_style(self.btn_remove_dict)
-        self.btn_remove_dict.clicked.connect(self.remove_from_user_dict)
+        self.btn_remove_dict.clicked.connect(self.remove_from_custom_words)
         buttons_layout.addWidget(self.btn_remove_dict, 2, 1)
 
         self.btn_display_history = QPushButton("Display History", self)
         self.set_button_style(self.btn_display_history)
-        self.btn_display_history.clicked.connect(self.display_history)
+        self.btn_display_history.clicked.connect(self.show_history)
         buttons_layout.addWidget(self.btn_display_history, 3, 0)
 
         self.clear_btn = QPushButton("Clear", self)
@@ -185,7 +231,7 @@ class PhraseCraftApp(QWidget):
 
     def spellcheck(self):
         text = self.text_input.text()
-        history_tracking.append(text)
+        self.db.add_to_history(text)
         blob = TextBlob(text)
         corrected_text = str(blob.correct())
 
@@ -234,28 +280,38 @@ class PhraseCraftApp(QWidget):
             self.output_area.setText(f"Synonyms of '{word}':\n" + ", ".join(synonyms))
         else:
             self.output_area.setText(f"No synonyms found for '{word}'.")
-
-    def add_to_user_dict(self):
+################################################################################################################
+    def add_to_custom_words(self):
         word = self.text_input.text()
-        user_dict.add(word)
-        self.output_area.setText(f"'{word}' added to My Dictionary.")
-
-    def remove_from_user_dict(self):
-        word = self.text_input.text()
-        user_dict.discard(word)
-
-    def display_user_dict(self):
-        if user_dict:
-            self.output_area.setText(f"My Dictionary:\n" + ", ".join(user_dict))
+        custom_words = self.db.get_all_custom_words()
+        if word not in ", ".join(custom_words):
+            self.db.add_to_custom_words(word)
+            self.output_area.setText(f"'{word}' added to My Dictionary.")
         else:
-            self.output_area.setText("My Dictionary is empty.")
+            self.output_area.setText("Already in My Dictionary")
 
-    def display_history(self):
-        if history_tracking:
-            self.output_area.setText(f"History:\n" + ", ".join(history_tracking))
+    def remove_from_custom_words(self):
+        word = self.text_input.text()
+        if word:
+            self.db.remove_from_custom_words(word)
+            self.output_area.setText("Success "+ f"'{word}' has been removed from My Dictionary.")
+        else:
+            self.output_area.setText("Nothing has been entered")
+
+    def show_history(self):        
+        history = self.db.get_all_history()
+        if history:
+            self.output_area.setText(f"History:\n" + ", ".join(history))
         else:
             self.output_area.setText("History is empty.")
 
+    def show_custom_words(self):
+        custom_words = self.db.get_all_custom_words()
+        if custom_words:
+            self.output_area.setText(f"My Dictionary:\n" + ", ".join(custom_words))
+        else:
+            self.output_area.setText("My Dictionary is empty.")
+####################################################################################################################
     def clear_output(self):
         self.output_area.setText("")
 
