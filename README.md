@@ -19,7 +19,7 @@ PhraseCraft is a Tkinter-based application designed to enhance your vocabulary a
   python3 ui.py
 ```
 ## Contact
-6366250274 for any queries/assistance
+Suchitra for any queries/assistance
 
 ## Credits
 
